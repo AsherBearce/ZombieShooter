@@ -8,13 +8,14 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 velocity;
     private bool isGrounded;
 
-    [Range(12, 15)]
-    public float speed = 12;
+    [Range(6, 15)]
+    public float speed = 6;
     public float gravity = -9.81f;
     public float groundDistance = 0.4f;
     public GameObject groundCheck;
     public LayerMask groundMask;
     public float jumpHeight = 2f;
+
 
     void Start()
     {
@@ -28,11 +29,6 @@ public class PlayerMovement : MonoBehaviour
         if (isGrounded && velocity.y < 0)
         {
             velocity.y = -2f;
-        }
-
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            Debug.Log(isGrounded);
         }
 
         float x = Input.GetAxis("Horizontal");
