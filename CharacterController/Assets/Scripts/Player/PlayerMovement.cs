@@ -22,6 +22,18 @@ public class PlayerMovement : MonoBehaviour
         controller = GetComponent<CharacterController>();
     }
 
+    public Vector3 getMovementVelocity()
+    {
+        float x = Input.GetAxis("Horizontal");
+        float z = Input.GetAxis("Vertical");
+        return transform.right * x + transform.forward * z;
+    }
+
+    public bool grounded()
+    {
+        return isGrounded;
+    }
+
     void Update()
     {
         isGrounded = Physics.CheckSphere(groundCheck.transform.position, groundDistance, groundMask);
@@ -31,9 +43,7 @@ public class PlayerMovement : MonoBehaviour
             velocity.y = -2f;
         }
 
-        float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
-        Vector3 move = transform.right * x + transform.forward * z;
+        Vector3 move = getMovementVelocity();
 
         controller.Move(move * Time.deltaTime * speed);
 
