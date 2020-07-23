@@ -127,22 +127,37 @@ public class AnimationController : MonoBehaviour
             //trackLeg(leftLeg, trackPoint.transform.position, leftLegRotation, leftLegPosition);
 
             rightFootIdeal.transform.position = rigBase.transform.position + rigBase.transform.forward * 0.125f;
+            leftFootIdeal.transform.position = rigBase.transform.position - rigBase.transform.forward * 0.125f;
+
             float rDist = (rightFootIdeal.transform.position - rightFootTarget.transform.position).magnitude;
-            float strideMultiplier = movementController.getMovementVelocity().magnitude > 0.001f ? 1f : 0.1f;
+            float lDist = (leftFootIdeal.transform.position - leftFootTarget.transform.position).magnitude;
+            float strideMultiplier = 1f;//movementController.getMovementVelocity().magnitude > 0.001f ? 1f : 0.1f;
 
             //Add animation for this later 
             if (!movementController.grounded())
             {
                 rightFootTarget.transform.position = rightFootIdeal.transform.position;
+                leftFootTarget.transform.position = leftFootIdeal.transform.position;
             }
 
-            if (rDist > strideMultiplier * strideLength && !rightFootTarget.GetComponent<Interpolator>().isLerping)
+            if (rDist > strideMultiplier * strideLength && 
+                !rightFootTarget.GetComponent<Interpolator>().isLerping
+                && !leftFootTarget.GetComponent<Interpolator>().isLerping)
             {
-                Vector3 to = rightFootIdeal.transform.position + movementController.getMovementVelocity();
-                rightFootTarget.GetComponent<Interpolator>().startLerp(rightFootTarget.transform.position, to, stepCurve, 0.1f);
+                Vector3 to = rightFootIdeal.transform.position + movementController.getMovementVelocity() * movementController.speed * 0.2f;
+                rightFootTarget.GetComponent<Interpolator>().startLerp(rightFootTarget.transform.position, to, stepCurve, 0.15f);
+            }
+
+            if (lDist > strideMultiplier * strideLength &&
+                !rightFootTarget.GetComponent<Interpolator>().isLerping
+                && !leftFootTarget.GetComponent<Interpolator>().isLerping)
+            {
+                Vector3 to = leftFootIdeal.transform.position + movementController.getMovementVelocity() * movementController.speed * 0.2f;
+                leftFootTarget.GetComponent<Interpolator>().startLerp(leftFootTarget.transform.position, to, stepCurve, 0.15f);
             }
 
             trackLeg(rightLeg, rightFootTarget.transform.position, rightLegRotation, rightLegPosition);
+            trackLeg(leftLeg, leftFootTarget.transform.position, leftLegRotation, leftLegPosition);
         }
     }
 }

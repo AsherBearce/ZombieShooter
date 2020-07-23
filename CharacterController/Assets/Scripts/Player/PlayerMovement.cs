@@ -26,7 +26,7 @@ public class PlayerMovement : MonoBehaviour
     {
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
-        return transform.right * x + transform.forward * z;
+        return (transform.right * x + transform.forward * z).normalized;
     }
 
     public bool grounded()
