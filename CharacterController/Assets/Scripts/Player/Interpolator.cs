@@ -30,11 +30,12 @@ public class Interpolator : MonoBehaviour
         {
             float timeSinceStarted = Time.time - timeStarted;
             float percent = timeSinceStarted / lerpTime;
-            Vector3 verticalDisplacement = yDisplacementCurve != null ? Vector3.up * yDisplacementCurve.Evaluate(percent) * 0.3f : Vector3.zero;
+            //Vector3 verticalDisplacement = yDisplacementCurve != null ? Vector3.up * yDisplacementCurve.Evaluate(percent) : Vector3.zero;
+            Vector3 verticalDisplacement = Vector3.zero;
 
             transform.position = Vector3.Lerp(lerpFrom, lerpTo, percent) + verticalDisplacement;
 
-            if (percent >= 1)
+            if (percent >= 1.1f)
             {
                 isLerping = false;
                 shouldLerp = false;

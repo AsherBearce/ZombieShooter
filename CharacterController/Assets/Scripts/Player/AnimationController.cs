@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//TODO: add custom timeline and quaternion interpolation system
+
 [RequireComponent(typeof(MouseLook))]
 [RequireComponent(typeof(PlayerMovement))]
 public class AnimationController : MonoBehaviour
@@ -17,10 +19,8 @@ public class AnimationController : MonoBehaviour
     public GameObject leftLeg;
 
     [Header("Limb Track Objects")]
-    public GameObject leftFootTarget;
-    public GameObject rightFootTarget;
-    public GameObject leftFootIdeal;
-    public GameObject rightFootIdeal;
+    public GameObject leftArmTracker;
+    public GameObject rightArmTracker;
 
     [Header("Animation Parameters")]
     public float torsoAngle = 0;
@@ -28,11 +28,6 @@ public class AnimationController : MonoBehaviour
     public float headlookAmount = 0.75f;
     [Range(0, 1)]
     public float armOffsetLimit;
-    [Range(0, 1)]
-    public float legDistanceLimit = 1;
-    public float strideLength;
-    public AnimationCurve stepCurve;
-    public float stepHeight;
 
     private const float limbLength = 2;
     private MouseLook mouseLook;
@@ -80,84 +75,46 @@ public class AnimationController : MonoBehaviour
         float angle = Vector3.Angle(localSpace, startFrom);
 
         float distFromHand = (arm.transform.position - worldSpaceTarget).magnitude - limbLength / 4;
-        distFromHand = Mathf.Clamp(distFromHand, -armOffsetLimit / 2, 0);
+        distFromHand = Mathf.Clamp(distFromHand, -armOffsetLimit / 2, armOffsetLimit / 2);
         
 
         arm.transform.Rotate(axis, angle);
         arm.transform.position -= distFromHand * (arm.transform.position - worldSpaceTarget).normalized;
     }
 
-    public void trackLeg(GameObject leg, Vector3 worldSpaceTarget, Quaternion startRotation, Vector3 startPosition)
-    {
-        leg.transform.localPosition = startPosition;
-        leg.transform.localRotation = startRotation;
-
-        //This needs fixing too ;-;
-
-        if (legDistanceLimit > 0)
-        {
-            float distance = (leg.transform.position.y - worldSpaceTarget.y) - limbLength / 4;
-            distance = Mathf.Clamp(distance, -legDistanceLimit / 2, 0);
-
-            Vector3 legOffset = -distance * (torso.transform.forward + torso.transform.up);
-            leg.transform.position += legOffset;
-        }
-
-        Vector3 startFrom = leg.transform.InverseTransformDirection(leg.transform.up);
-
-        Vector3 localSpace = leg.transform.InverseTransformPoint(worldSpaceTarget);
-        Vector3 axis = Vector3.Cross(localSpace, -startFrom);
-        float angle = Vector3.Angle(localSpace, startFrom);
-
-        leg.transform.Rotate(axis, angle);
-    }
-
     // Update is called once per frame
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            Time.timeScale = 0.1f;
+        }
+
         if (head != null)
         {
             head.transform.localRotation = Quaternion.Euler(0, torsoAngle, 0) * Quaternion.Euler(mouseLook.pitch * headlookAmount, 0, 0);
             torso.transform.localRotation = Quaternion.Euler(mouseLook.pitch * ( 1 - headlookAmount) + 180f, -90f, 0) * Quaternion.Euler(0, -torsoAngle, 0);
             hips.transform.localRotation = Quaternion.Euler(0, torsoAngle, 0);
+            rightLeg.transform.localRotation = rightLegRotation;
+            leftLeg.transform.localRotation = leftLegRotation;
 
-            //trackArm(rightArm, trackPoint.transform.position, rightArmRotation, rightArmPosition);
-            //trackArm(leftArm, trackPoint.transform.position, leftArmRotation, leftArmPosition);
+            trackArm(rightArm, rightArmTracker.transform.position, rightArmRotation, rightArmPosition);
+            trackArm(leftArm, leftArmTracker.transform.position, leftArmRotation, leftArmPosition);
 
-            //trackLeg(leftLeg, trackPoint.transform.position, leftLegRotation, leftLegPosition);
+            Vector3 axis = Vector3.Cross(movementController.getMovementVelocity(), Vector3.up);
+            axis = hips.transform.InverseTransformDirection(axis);
+            float targetAngle = 0;
 
-            rightFootIdeal.transform.position = rigBase.transform.position + rigBase.transform.forward * 0.125f;
-            leftFootIdeal.transform.position = rigBase.transform.position - rigBase.transform.forward * 0.125f;
-
-            float rDist = (rightFootIdeal.transform.position - rightFootTarget.transform.position).magnitude;
-            float lDist = (leftFootIdeal.transform.position - leftFootTarget.transform.position).magnitude;
-            float strideMultiplier = 1f;//movementController.getMovementVelocity().magnitude > 0.001f ? 1f : 0.1f;
-
-            //Add animation for this later 
-            if (!movementController.grounded())
+            if (movementController.getMovementVelocity().magnitude < 0.9f)
             {
-                rightFootTarget.transform.position = rightFootIdeal.transform.position;
-                leftFootTarget.transform.position = leftFootIdeal.transform.position;
+                targetAngle = Mathf.Lerp(targetAngle, 0, 0.5f);
             }
-
-            if (rDist > strideMultiplier * strideLength && 
-                !rightFootTarget.GetComponent<Interpolator>().isLerping
-                && !leftFootTarget.GetComponent<Interpolator>().isLerping)
+            else
             {
-                Vector3 to = rightFootIdeal.transform.position + movementController.getMovementVelocity() * movementController.speed * 0.2f;
-                rightFootTarget.GetComponent<Interpolator>().startLerp(rightFootTarget.transform.position, to, stepCurve, 0.15f);
+                targetAngle = 45f * Mathf.Cos(10 * Time.time);
             }
-
-            if (lDist > strideMultiplier * strideLength &&
-                !rightFootTarget.GetComponent<Interpolator>().isLerping
-                && !leftFootTarget.GetComponent<Interpolator>().isLerping)
-            {
-                Vector3 to = leftFootIdeal.transform.position + movementController.getMovementVelocity() * movementController.speed * 0.2f;
-                leftFootTarget.GetComponent<Interpolator>().startLerp(leftFootTarget.transform.position, to, stepCurve, 0.15f);
-            }
-
-            trackLeg(rightLeg, rightFootTarget.transform.position, rightLegRotation, rightLegPosition);
-            trackLeg(leftLeg, leftFootTarget.transform.position, leftLegRotation, leftLegPosition);
+            rightLeg.transform.Rotate(axis, targetAngle);
+            leftLeg.transform.Rotate(axis, -targetAngle);
         }
     }
 }
