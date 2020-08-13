@@ -85,11 +85,6 @@ public class AnimationController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            Time.timeScale = 0.1f;
-        }
-
         if (head != null)
         {
             head.transform.localRotation = Quaternion.Euler(0, torsoAngle, 0) * Quaternion.Euler(mouseLook.pitch * headlookAmount, 0, 0);
@@ -98,8 +93,11 @@ public class AnimationController : MonoBehaviour
             rightLeg.transform.localRotation = rightLegRotation;
             leftLeg.transform.localRotation = leftLegRotation;
 
-            trackArm(rightArm, rightArmTracker.transform.position, rightArmRotation, rightArmPosition);
-            trackArm(leftArm, leftArmTracker.transform.position, leftArmRotation, leftArmPosition);
+            if (rightArmTracker != null && leftArmTracker != null)
+            {
+                trackArm(rightArm, rightArmTracker.transform.position, rightArmRotation, rightArmPosition);
+                trackArm(leftArm, leftArmTracker.transform.position, leftArmRotation, leftArmPosition);
+            }
 
             Vector3 axis = Vector3.Cross(movementController.getMovementVelocity(), Vector3.up);
             axis = hips.transform.InverseTransformDirection(axis);
