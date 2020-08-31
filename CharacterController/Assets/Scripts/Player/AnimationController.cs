@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Assets.Scripts.Util;
 
 //TODO: add custom timeline and quaternion interpolation system
 
@@ -8,6 +9,7 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerMovement))]
 public class AnimationController : MonoBehaviour
 {
+    private Timeline test;
     [Header("Rig Objects")]
     public GameObject head;
     public GameObject torso;
@@ -47,6 +49,18 @@ public class AnimationController : MonoBehaviour
 
     private void Start()
     {
+        test = new Timeline(true,
+            new System.Tuple<float, System.Action>[]
+            {
+                new System.Tuple<float, System.Action>(0, () => Debug.Log("Key 1")),
+                new System.Tuple<float, System.Action>(2, () => Debug.Log("Key 2")),
+                new System.Tuple<float, System.Action>(4, () => Debug.Log("Key 3")),
+                new System.Tuple<float, System.Action>(6, () => { })//This is annoying
+                
+            });
+
+        test.finishTime = 6;
+
         mouseLook = transform.GetComponent<MouseLook>();
         movementController = transform.GetComponent<PlayerMovement>();
 
@@ -85,6 +99,14 @@ public class AnimationController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (Input.GetKeyDown("l"))
+        {
+            test.play(Time.time);
+        }
+
+        test.updateTime(Time.time);
+
+
         if (head != null)
         {
             head.transform.localRotation = Quaternion.Euler(0, torsoAngle, 0) * Quaternion.Euler(mouseLook.pitch * headlookAmount, 0, 0);
